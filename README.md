@@ -18,7 +18,7 @@ kanso audits, refactors, commits, and writes PRs with a curatorial bias: delete 
 | Skill | What it does | Invocation |
 |---|---|---|
 | `kanso-principles` | Standing anti-dilution rules. Loaded automatically. | auto |
-| `kanso-audit` | Read-only review. Runs in a forked subagent, returns a findings report. | `/kanso-audit [scope]` |
+| `kanso-audit` | Reviews code, reports findings, proposes fixes; hands refactors to `/kanso-refactor` and applies behaviour changes in place on approval. | `/kanso-audit [scope]` |
 | `kanso-refactor` | Behaviour-preserving cleanup. Never mixes refactor with behaviour change. | `/kanso-refactor [scope]` |
 | `kanso-commit` | Atomic commits with messages that answer *why*. | `/kanso-commit` |
 | `kanso-pr` | Self-contained PR descriptions drawn from commit history. | `/kanso-pr` |
@@ -96,8 +96,8 @@ Skills load on next session, or immediately via the file watcher.
 
 ## How it behaves
 
-- **Audit is read-only and forks its context.** Findings don't pollute the working session.
-- **Everything that writes is manual-only.** Commit, PR, refactor, and context edits never auto-invoke.
+- **Audit reports before it edits.** Findings surface in the working session; fixes land only after you approve the proposal block (`y/n/edit/pick`).
+- **Everything that writes is manual-only.** Audit fixes, commits, PRs, refactors, and context edits never auto-invoke.
 - **Context target is `AGENTS.md`.** `CLAUDE.md` is only touched when the guidance is Claude-specific.
 - **Voice preservation over house style.** If the repo is terse, kanso stays terse.
 
