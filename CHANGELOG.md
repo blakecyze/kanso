@@ -7,7 +7,7 @@ All notable changes to kanso are recorded here. Format follows [Keep a Changelog
 ### Added
 
 - `kanso-principles` — standing anti-dilution rules, auto-loaded for any code-related task.
-- `kanso-audit` — read-only code review forked to an Explore subagent, produces a structured findings report.
+- `kanso-audit` — code review via an Explore subagent that produces a structured findings report, proposes concrete fixes tagged by shape (`refactor` or `behaviour-change`), and on approval hands refactors to `/kanso-refactor audit-report` while applying behaviour changes in place.
 - `kanso-refactor` — behaviour-preserving cleanup against the anti-pattern taxonomy.
 - `kanso-commit` — atomic commits with messages that answer *why*.
 - `kanso-pr` — self-contained PR descriptions pulled from commit history.

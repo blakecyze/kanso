@@ -2,16 +2,23 @@
 name: kanso-audit
 description: Use when the user asks for a code review, audit, pre-PR check, quality sweep, or pattern analysis of a diff, branch, module, or codebase. Also use when the user asks to "check" or "look over" their code for issues.
 argument-hint: "[scope: diff|branch|module-path|all]"
-context: fork
 agent: Explore
 allowed-tools: Bash(git *) Bash(gh *) Bash(rg *) Bash(find *) Bash(wc *)
 ---
 
 # kanso-audit
 
-Read-only code review. Produces a structured findings report. Makes no edits and suggests no file modifications beyond the report itself.
+Code review that reports findings, proposes concrete fixes, and — on approval — either hands cleanup off to `/kanso-refactor` or applies the fix in place. The principles from `kanso-principles` govern both the findings and the fixes.
 
-Runs in a forked subagent so findings don't pollute the working session. The principles from `kanso-principles` apply throughout.
+Three phases:
+
+- **Phase A — Investigation.** Read-only. Gather context and produce the findings report using the framework below. The Explore agent does not edit files.
+- **Phase B — Proposal.** Translate Tier 1 and Tier 2 findings into a numbered list. Tag each entry by *shape*: `refactor` (behaviour-preserving) or `behaviour-change` (correctness, security, architecture). Show the list in the approval block and wait.
+- **Phase C — Apply.**
+  - For `refactor`-shaped fixes → hand off to `/kanso-refactor audit-report`. That skill already enforces the behaviour-preserving rule, has the refactor taxonomy, and knows how to split work into commit-able groups. Don't reimplement it here.
+  - For `behaviour-change` fixes → apply in place in the main session, one at a time, re-reading each file immediately before editing. These are not refactors; each is a real behaviour change and the user has approved it as such.
+
+Run the report in the caller's transcript — do not suppress findings to a fork.
 
 ## Resolve the scope
 
@@ -125,7 +132,58 @@ Emit a single markdown document. No preamble, no "Let me know if you'd like me t
 ## What's good
 
 <One or two sentences. Not flattery. Note anything genuinely well-handled that a future modifier should preserve.>
+
+## Proposed fixes
+
+### Fix for [1] <finding title>
+**File:** `path/to/file.ts:142`
+**Shape:** `refactor` | `behaviour-change`
+**Change:** <one-sentence description of the edit>
+**Rationale:** <which principle from kanso-principles this upholds>
+
+<minimal diff or before/after snippet>
+
+### Fix for [2] ...
 ```
+
+One entry per Tier 1 and Tier 2 finding. Tier 3 fixes are only proposed when the user ran `all` scope or explicitly asked. If a finding has no safe mechanical fix (e.g. an architecture disagreement), say so and omit it from the proposal list rather than inventing one.
+
+### How to tag the shape
+
+- **`refactor`** — the fix produces identical behaviour for every input the code already handles. Examples: delete dead code, inline a filler variable, remove a tautological comment, collapse a one-implementation factory, rename a local variable. These are the targets listed in `kanso-refactor`.
+- **`behaviour-change`** — the fix alters what the code does under some input. Examples: fix an off-by-one, remove defensive theatre that was swallowing errors, patch an auth bypass, change an architectural boundary. When in doubt, tag as `behaviour-change` — that forces an explicit ask rather than a silent refactor.
+
+## The approval gate
+
+After the report, emit exactly this block and stop:
+
+```
+Proposed fixes: <n> across <m> files.
+
+  Refactor (behaviour-preserving):
+    1. <file>:<line> — <one-line change>
+    2. <file>:<line> — <one-line change>
+
+  Behaviour changes (need explicit approval):
+    3. <file>:<line> — <one-line change>
+    4. <file>:<line> — <one-line change>
+
+Apply fixes? (y/n/edit/pick)
+  y       — hand refactors to /kanso-refactor audit-report, then apply behaviour changes
+  refactor-only  — hand refactors off; skip behaviour changes
+  behaviour-only — apply behaviour changes; leave refactors for later
+  pick 1,3 — apply only the numbered subset (routed by shape)
+  edit    — amend the proposal
+  n       — stop, leave the report in the transcript
+```
+
+Routing rules on apply:
+
+- Any selected `refactor`-shaped fix → invoke `/kanso-refactor audit-report` with those findings. Do not edit refactor targets directly from this skill.
+- Any selected `behaviour-change` fix → apply in the main session, one at a time. Re-read the file immediately before editing.
+- Do not mix the two in a single commit. `kanso-refactor`'s hard rule — refactors and behaviour changes travel in separate commits — applies here too.
+
+If there are zero Tier 1 or Tier 2 findings, skip the proposal and approval blocks entirely — the report stands alone.
 
 ## Framing
 
@@ -138,11 +196,12 @@ Emit a single markdown document. No preamble, no "Let me know if you'd like me t
 
 ## What this skill never does
 
-- Edit files. The audit is read-only.
+- Edit files before the user has approved the proposal block.
 - Run tests, build the project, or execute the code being reviewed.
 - Check out branches or pull remote changes.
 - Flag things a linter already catches, without also noting the missing linter rule.
 - Generate findings for padding. If there are three Tier 1 findings and nothing else, the report has three findings.
+- Prompt for approval when there are no Tier 1 or Tier 2 fixes to propose.
 
 ## Failure modes to avoid
 
@@ -150,3 +209,9 @@ Emit a single markdown document. No preamble, no "Let me know if you'd like me t
 - Flagging AI-sounding code that is fine. Not every verbose function is slop.
 - Treating this as a style-guide compliance scan. The anti-dilution taxonomy is about harm, not taste.
 - Producing a review so long the author skims it. Density matters more than coverage.
+- Proposing fixes that introduce the same anti-dilution patterns the audit just flagged.
+- Bundling unrelated fixes into one approval block so the user can't accept a subset. Group by shape, then by finding; let `pick` select.
+- Editing a file without re-reading it first — state may have changed between the audit and approval.
+- Applying a refactor-shaped fix directly instead of handing it to `/kanso-refactor`. That's duplication, and it bypasses the behaviour-preserving discipline that skill enforces.
+- Mislabelling a behaviour change as a refactor to slip it past the gate. When in doubt, tag `behaviour-change`.
+- Mixing refactors and behaviour changes in a single commit once fixes are applied.
