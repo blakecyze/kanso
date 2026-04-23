@@ -1,0 +1,20 @@
+{
+  "name": "kanso",
+  "version": "0.1.0",
+  "description": "Anti-dilution skills for Claude Code. Keeps AI-generated code tight, intentional, and free of slop.",
+  "author": {
+    "name": "Blake Cyze",
+    "url": "https://cyze.dev"
+  },
+  "homepage": "https://github.com/blakecyze/kanso",
+  "repository": "https://github.com/blakecyze/kanso",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "skills",
+    "code-quality",
+    "anti-slop",
+    "refactor",
+    "code-review"
+  ]
+}
