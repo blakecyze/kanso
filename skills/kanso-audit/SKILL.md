@@ -2,7 +2,6 @@
 name: kanso-audit
 description: Use when the user asks for a code review, audit, pre-PR check, quality sweep, or pattern analysis of a diff, branch, module, or codebase. Also use when the user asks to "check" or "look over" their code for issues.
 argument-hint: "[scope: diff|branch|module-path|all]"
-agent: Explore
 allowed-tools: Bash(git *) Bash(gh *) Bash(rg *) Bash(find *) Bash(wc *)
 ---
 
@@ -12,7 +11,7 @@ Code review that reports findings, proposes concrete fixes, and — on approval 
 
 Three phases:
 
-- **Phase A — Investigation.** Read-only. Gather context and produce the findings report using the framework below. The Explore agent does not edit files.
+- **Phase A — Investigation.** Read-only. Gather context and produce the findings report using the framework below. The skill's `allowed-tools` deliberately exclude Edit/Write so the investigation cannot modify files.
 - **Phase B — Proposal.** Translate Tier 1 and Tier 2 findings into a numbered list. Tag each entry by *shape*: `refactor` (behaviour-preserving) or `behaviour-change` (correctness, security, architecture). Show the list in the approval block and wait.
 - **Phase C — Apply.**
   - For `refactor`-shaped fixes → hand off to `/kanso-refactor audit-report`. That skill already enforces the behaviour-preserving rule, has the refactor taxonomy, and knows how to split work into commit-able groups. Don't reimplement it here.
