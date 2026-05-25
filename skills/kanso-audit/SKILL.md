@@ -17,7 +17,11 @@ Three phases:
   - For `refactor`-shaped fixes → hand off to `/kanso-refactor audit-report`. That skill already enforces the behaviour-preserving rule, has the refactor taxonomy, and knows how to split work into commit-able groups. Don't reimplement it here.
   - For `behaviour-change` fixes → apply in place in the main session, one at a time, re-reading each file immediately before editing. These are not refactors; each is a real behaviour change and the user has approved it as such.
 
-Run the report in the caller's transcript — do not suppress findings to a fork.
+## Always run inline
+
+This skill runs in the calling chat. Never dispatch the audit via the Agent or Task tool, never delegate it to a subagent, never hand it off to a parallel runner. The findings, the approval gate, and any follow-up `/kanso-refactor` invocation all happen in the user's current transcript so the user can see and act on them directly. A subagent run produces output in a side window the user can't easily reach — that defeats the point.
+
+Same rule for the follow-up: when `/kanso-refactor` is invoked from the approval gate, it runs inline too.
 
 ## Resolve the scope
 
@@ -94,58 +98,55 @@ From `kanso-principles`. Call these out by name so they're searchable:
 
 ## The report format
 
-Emit a single markdown document. No preamble, no "Let me know if you'd like me to…", no apology. Structure:
+Emit a single tight markdown document. No preamble, no "Let me know if you'd like me to…", no apology. Two-line summary, one-line findings, then the approval gate.
+
+If there are no Tier 1 or Tier 2 findings, emit only the no-change message (see below) and stop.
+
+### When there are findings
 
 ```markdown
 # Audit: <short scope description>
 
-**Scope:** <what was reviewed>
-**Files:** <count>
-**Findings:** <tier 1 count> blocker, <tier 2 count> important, <tier 3 count> polish
+**Files:** <n> · **Findings:** <t1> blocker, <t2> important, <t3> polish
 
-## Summary
+<Two lines max. Lead with the highest-severity issue in plain language. State whether refactor alone covers it, or whether behaviour changes are also on the table.>
 
-<Two or three sentences. Lead with the highest-severity finding. If the diff is clean, say so.>
+## Findings
 
-## Blocker findings
-
-### [1] <short title>
-**Location:** `path/to/file.ts:142`
-**Category:** Correctness
-**Pattern:** <anti-dilution pattern name if applicable>
-
-<One paragraph: what is wrong, why it matters, evidence.>
-
-**Recommendation:** <Specific fix. Not "improve this" but "extract the DB call to a repository method and remove the try/catch".>
-
-### [2] ...
-
-## Important findings
-
-(same structure)
-
-## Polish findings
-
-(same structure, but omit entirely if the signal ratio would drop below 60%)
-
-## What's good
-
-<One or two sentences. Not flattery. Note anything genuinely well-handled that a future modifier should preserve.>
-
-## Proposed fixes
-
-### Fix for [1] <finding title>
-**File:** `path/to/file.ts:142`
-**Shape:** `refactor` | `behaviour-change`
-**Change:** <one-sentence description of the edit>
-**Rationale:** <which principle from kanso-principles this upholds>
-
-<minimal diff or before/after snippet>
-
-### Fix for [2] ...
+[1] `path/to/file.ts:142` — <one-line description> (blocker, refactor)
+[2] `path/to/file.ts:88` — <one-line description> (important, behaviour-change)
+[3] `path/to/other.ts:14` — <one-line description> (important, refactor)
 ```
 
-One entry per Tier 1 and Tier 2 finding. Tier 3 fixes are only proposed when the user ran `all` scope or explicitly asked. If a finding has no safe mechanical fix (e.g. an architecture disagreement), say so and omit it from the proposal list rather than inventing one.
+One line per Tier 1 and Tier 2 finding. Format: `[N] \`path:line\` — <what's wrong> (<tier>, <shape>)`. Use the anti-dilution pattern name in the description when one applies (`defensive theatre swallows db errors`, not `error handling issue`).
+
+Tier 3 findings appear only when the user ran `all` scope or explicitly asked, and only as additional one-liners under a `## Polish` heading. If a finding has no safe mechanical fix (e.g. an architecture disagreement), include it in the list with `(no auto-fix)` and exclude it from the approval gate's apply count.
+
+Omit "What's good" and "Proposed fixes" detail blocks. The one-liner is the proposal; the diff is the detail. If the user wants more context on a specific finding, they'll ask.
+
+### When there are behaviour changes
+
+After the `## Findings` list, add a plain-language block for each behaviour-change finding so the user knows what would actually shift:
+
+```markdown
+## Behaviour changes — your call
+
+[2] `path/to/file.ts:88`: right now this swallows database errors and returns null. Removing the try/catch means callers see the actual exception — almost certainly what you want, but it's a real behaviour shift, not a cleanup.
+```
+
+One short paragraph per behaviour-change finding. Numbered to match the findings list. Plain language, no jargon. Skip this section entirely if all findings are refactor-shaped.
+
+### When the diff is clean
+
+```markdown
+# Audit: <short scope description>
+
+**Files:** <n> · **Findings:** none
+
+No changes needed. <One short sentence noting what was checked.>
+```
+
+No approval gate. No further prompting. End of turn.
 
 ### How to tag the shape
 
@@ -154,35 +155,32 @@ One entry per Tier 1 and Tier 2 finding. Tier 3 fixes are only proposed when the
 
 ## The approval gate
 
-After the report, emit exactly this block and stop:
+If there is at least one Tier 1 or Tier 2 finding, always end the report with the approval gate. No exceptions — the gate is what makes `/kanso-audit` a single-command workflow rather than a report-and-wait. Emit exactly this block and stop:
 
 ```
-Proposed fixes: <n> across <m> files.
+Apply fixes? (<r> refactor, <b> behaviour-change)
 
-  Refactor (behaviour-preserving):
-    1. <file>:<line> — <one-line change>
-    2. <file>:<line> — <one-line change>
-
-  Behaviour changes (need explicit approval):
-    3. <file>:<line> — <one-line change>
-    4. <file>:<line> — <one-line change>
-
-Apply fixes? (y/n/edit/pick)
-  y       — hand refactors to /kanso-refactor audit-report, then apply behaviour changes
-  refactor-only  — hand refactors off; skip behaviour changes
-  behaviour-only — apply behaviour changes; leave refactors for later
-  pick 1,3 — apply only the numbered subset (routed by shape)
-  edit    — amend the proposal
-  n       — stop, leave the report in the transcript
+  y                — run /kanso-refactor on the refactor findings
+  y + behaviour    — run /kanso-refactor, then apply behaviour changes inline
+  behaviour-only   — apply behaviour changes inline; skip refactor
+  pick 1,3         — apply only those (routed by shape)
+  edit             — amend the proposal
+  n                — stop, leave the report in the transcript
 ```
+
+Adapt the option list to what's actually present:
+
+- All findings are refactor-shaped → show only `y`, `pick`, `edit`, `n`. `y` runs `/kanso-refactor`.
+- All findings are behaviour-change → show `y` (apply inline), `pick`, `edit`, `n`. Drop the refactor option.
+- Mixed → show the full list above.
+
+Treat any affirmative phrasing that mentions behaviour ("y and apply the behaviour changes too", "yes do both", "all of it") as `y + behaviour`. Treat a bare `y` / "yes" / "go" as refactor-only when both shapes are present — do not silently apply behaviour changes on an ambiguous yes.
 
 Routing rules on apply:
 
-- Any selected `refactor`-shaped fix → invoke `/kanso-refactor audit-report` with those findings. Do not edit refactor targets directly from this skill.
-- Any selected `behaviour-change` fix → apply in the main session, one at a time. Re-read the file immediately before editing.
+- Any selected `refactor`-shaped fix → invoke `/kanso-refactor audit-report` **inline in this chat**. Do not edit refactor targets directly from this skill. Do not dispatch the refactor via Agent/Task.
+- Any selected `behaviour-change` fix → apply in the current chat, one at a time. Re-read the file immediately before editing.
 - Do not mix the two in a single commit. `kanso-refactor`'s hard rule — refactors and behaviour changes travel in separate commits — applies here too.
-
-If there are zero Tier 1 or Tier 2 findings, skip the proposal and approval blocks entirely — the report stands alone.
 
 ## Framing
 
@@ -195,12 +193,15 @@ If there are zero Tier 1 or Tier 2 findings, skip the proposal and approval bloc
 
 ## What this skill never does
 
+- Run via the Agent or Task tool, or dispatch any part of itself to a subagent or parallel runner. Findings and approval gate live in the calling chat.
 - Edit files before the user has approved the proposal block.
+- Skip the approval gate when there is at least one Tier 1 or Tier 2 finding. The gate is mandatory whenever there is something to fix.
+- Prompt for approval when there is nothing to fix. The clean-diff message stands alone.
 - Run tests, build the project, or execute the code being reviewed.
 - Check out branches or pull remote changes.
 - Flag things a linter already catches, without also noting the missing linter rule.
 - Generate findings for padding. If there are three Tier 1 findings and nothing else, the report has three findings.
-- Prompt for approval when there are no Tier 1 or Tier 2 fixes to propose.
+- Silently treat a bare "yes" as approval to apply behaviour changes. Behaviour changes need explicit opt-in.
 
 ## Failure modes to avoid
 
