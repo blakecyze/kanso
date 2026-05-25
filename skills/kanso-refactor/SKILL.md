@@ -12,6 +12,10 @@ Behaviour-preserving cleanup. Removes dilution, tightens code, deletes cruft. Ne
 
 The principles from `kanso-principles` apply. The anti-dilution taxonomy is the primary target.
 
+## Always run inline
+
+This skill runs in the calling chat — including when invoked as the follow-up to `/kanso-audit`. Never dispatch via the Agent or Task tool, never run as a subagent, never split work into a parallel runner whose output lands in a side window. Edits, summaries, and any clarifying questions all happen in the user's current transcript.
+
 ## The hard rule
 
 **Refactoring must not alter behaviour. Behaviour changes must avoid refactoring.**
