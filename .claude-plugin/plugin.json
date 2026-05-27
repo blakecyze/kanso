@@ -1,6 +1,6 @@
 {
   "name": "kanso",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Anti-dilution skills for Claude Code. Keeps AI-generated code tight, intentional, and free of slop.",
   "author": {
     "name": "Blake Cyze",
