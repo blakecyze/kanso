@@ -15,6 +15,7 @@
     "code-quality",
     "anti-slop",
     "refactor",
-    "code-review"
+    "code-review",
+    "maintainability"
   ]
 }
