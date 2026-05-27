@@ -2,7 +2,7 @@
 
 > 簡素 — elimination of clutter.
 
-Eight Claude Code skills for people who think AI-generated code is too long.
+Nine Claude Code skills for people who think AI-generated code is too long.
 
 kanso audits, refactors, commits, and writes PRs with a curatorial bias: delete before you add, match the repo's voice, earn every line.
 
@@ -21,6 +21,7 @@ kanso audits, refactors, commits, and writes PRs with a curatorial bias: delete 
 | `kanso-prompting` | Standing rules for writing sharper prompts. Loaded by `/kanso-task`. | auto (via task) |
 | `kanso-task` | Rewrites a rough request into a sharp prompt, then executes it inline with kanso-principles loaded. | `/kanso-task [request]` |
 | `kanso-audit` | Reviews code, reports findings, proposes fixes; hands refactors to `/kanso-refactor` and applies behaviour changes in place on approval. | `/kanso-audit [scope]` |
+| `kanso-nuclear` | Structural maintainability review. Judo over rearrangement, file sprawl, spaghetti growth, abstraction theatre, wrong-layer logic. Defaults to the whole codebase. | `/kanso-nuclear [scope]` |
 | `kanso-refactor` | Behaviour-preserving cleanup. Never mixes refactor with behaviour change. | `/kanso-refactor [scope]` |
 | `kanso-commit` | Atomic commits with messages that answer *why*. | `/kanso-commit` |
 | `kanso-pr` | Self-contained PR descriptions drawn from commit history. | `/kanso-pr` |
