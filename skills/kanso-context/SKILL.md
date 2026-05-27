@@ -203,19 +203,37 @@ Compare AGENTS.md against recent merged PRs:
 4. Flag emerging patterns: "Three recent PRs introduced `src/domains/` subfolders. Is this a new convention worth documenting?"
 5. Never auto-write new rules based on emerging patterns. Ask the user.
 
-## The self-update instruction
+## The self-updating context loop
 
-When initialising or pruning, include at the end of AGENTS.md:
+Context files decay. The cheapest way to keep one alive is to let the agent itself propose updates the moment a mistake recurs — but only on the user's command, never silently. Two halves: the in-file footer, and the workflow the user runs when an agent slips up.
+
+### The footer (added on init / prune)
+
+Append this to AGENTS.md:
 
 ```markdown
 ## Maintenance
 
-When you (the agent) learn new project-specific facts during a session
-that would be durably useful, propose an update to this file. Do not
-edit without the user's approval.
+When you (the agent) learn a durable project-specific fact during a
+session — a gotcha, a convention, a "do not" — propose an update to
+this file. Do not edit without the user's approval.
 ```
 
-This turns the agent into a maintenance participant. The user still controls all changes.
+This invites the agent to participate in maintenance. The user still holds the pen.
+
+### The user-side prompt (paste-ready)
+
+When the agent makes a mistake that would be cheaper to prevent than to keep correcting, the user can fix it at the context layer in one move. Surface this prompt to the user in audit output and in the init / prune wrap-up — verbatim, so they can paste it:
+
+```
+Update AGENTS.md so you do not repeat this. Add the rule in the
+correct section, keep it specific (not "be careful"), and show me
+the diff before saving.
+```
+
+The result is a context file that learns from its own failures. The user gates every change; the agent does the drafting.
+
+Same instruction works for `CLAUDE.md` when the mistake is genuinely Claude-specific (tool use, slash command behaviour, IDE quirks). Default target is AGENTS.md.
 
 ## Framing
 
