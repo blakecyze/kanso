@@ -50,10 +50,13 @@ this change if it's relevant.>
 Otherwise: algorithmic choices, data structure decisions, architectural
 tradeoffs that aren't visible in the code. One bullet per decision.>
 
-## Testing
+## Verification
 
-<What was tested, how to reproduce, edge cases verified. If there's a
-manual test path, spell it out.>
+<What was actually run and the result. Test command and outcome,
+typecheck, lint, manual paths exercised. If something wasn't tested,
+say so explicitly and why — "no integration tests exist for this
+module" beats silence. Reviewers shouldn't have to guess what's
+covered.>
 
 ## Risks
 
@@ -74,7 +77,7 @@ If the branch has well-written commits (ideally via `/kanso-commit`), the PR bod
 - **What** → subject lines of the commits, combined.
 - **Why** → bodies of the commits, deduplicated and organised.
 - **How** → any non-obvious decisions already in commit bodies.
-- **Testing** → any test-related commits, plus whatever's new in `__tests__/` or `*.test.*` files.
+- **Verification** → any test-related commits, whatever's new in `__tests__/` or `*.test.*` files, plus the verify results from `/kanso-audit` or `/kanso-refactor` if they ran on this branch.
 
 If commits are poorly written ("fix", "wip", "more work"), the PR body has to carry all the context that the commits lack. Flag this to the user — ideally they should rewrite the commits before opening the PR, or at least squash on merge.
 

@@ -49,14 +49,20 @@ If no scope is given and there's no obvious focus, ask.
 
 ## Calibrate before changing
 
-Read surrounding code. Refactor decisions must fit the repo's existing style, not impose a new one. Check:
+Get the lay of the land in one turn before reading anything:
+
+- Working tree state: `!git status --short`
+- What's actually changed: `!git diff --stat`
+- Recent commits for voice: `!git log -n 10 --oneline`
+
+Then read surrounding code. Refactor decisions must fit the repo's existing style, not impose a new one. Check:
 
 - Naming conventions (`get_*` vs `fetch_*`, camelCase vs snake_case)
 - Error handling patterns (exceptions vs result types vs error returns)
 - Comment density (some codebases genuinely warrant more comments)
 - Formatter and linter configs — anything they enforce is not your job
 
-If the repo has a test suite, note how to run it. The user should run tests after; the skill should not run them automatically (side effects, flakiness, slow).
+If the repo has a test suite, note how to run it — the verify step below will use it.
 
 ## The refactor targets
 
@@ -96,7 +102,56 @@ Attack in this order. Stop when the signal-to-cost ratio drops.
 3. **Make changes one logical group at a time.** Each group should be commit-able independently (even though this skill doesn't commit).
 4. **Preserve voice.** Match the author's existing code style, indentation habits, and comment density within the repo.
 5. **Verify mentally.** For each change, walk through: does this produce the same output for the same input? If not, roll back.
-6. **Report what was done.** Summary at the end: what was deleted, what was inlined, what was renamed, with file:line references. Flag anything deferred as a question for the user.
+6. **Verify.** Run the project's verification command (see below) and capture the result. A refactor that breaks the build isn't a refactor — it's a regression in disguise.
+7. **Report what was done.** Summary at the end: what was deleted, what was inlined, what was renamed, with file:line references. Include the verify result. Flag anything deferred as a question for the user.
+
+## Verify
+
+A refactor is only behaviour-preserving if you can show it. Run the project's verification command after edits land and paste the exit code.
+
+### Discover the command
+
+In priority order:
+
+1. **`AGENTS.md` / `CLAUDE.md`** — explicit commands. Use these first.
+2. **`package.json` scripts** — `test`, `typecheck`, `lint`, `check`.
+3. **`pyproject.toml`, `tox.ini`, `Makefile`** — `pytest`, `make test`, `make check`, `ruff`, `mypy`.
+4. **`go.mod`** — `go test ./...`, `go vet ./...`.
+5. **`Cargo.toml`** — `cargo test`, `cargo check`, `cargo clippy`.
+
+Pick the narrowest command that covers the touched files. Typecheck plus the relevant test file is usually enough; a full suite is fine when the refactor is broad.
+
+The command may prompt for permission on first run — that's expected. Don't reroute around it.
+
+### Report the result
+
+On pass:
+
+```
+✓ Verified — <command>
+exit 0
+<last meaningful lines>
+```
+
+On fail:
+
+```
+✗ Verification failed — <command>
+exit <n>
+<failing output>
+```
+
+Failure means the refactor altered behaviour. Roll back the edit and surface the surprise to the user — don't iterate silently to make the failure go away.
+
+### When no command exists
+
+```
+⚠ No verification command found.
+Checked: AGENTS.md, package.json, pyproject.toml, Makefile.
+The refactor is applied but unverified — review the diff manually before committing.
+```
+
+Never silently skip. Either verify, or say you didn't and why.
 
 ## Output format
 
@@ -120,9 +175,14 @@ After making edits, produce a summary like:
 - `src/auth/session.ts:42` wraps `db.query()` in a try/catch that returns null on failure. Removing this would change behaviour. Should the error propagate, be logged, or be wrapped in a typed error?
 - `src/api/user.ts:89` contains a `fetch_user` function while the rest of the module uses `get_*`. Renaming would be an API change if this is exported. Is it safe to rename?
 
+### Verification
+
+✓ Verified — `<command>`
+exit 0
+<last meaningful lines of output>
+
 ### Next steps
 
-- Run the test suite to confirm no regressions: `<repo's test command>`
 - Review the diff before committing
 - Use `/kanso-commit` to stage and message the changes
 ```

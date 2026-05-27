@@ -1,7 +1,7 @@
 ---
 name: kanso-audit
 description: Use when the user asks for a code review, audit, pre-PR check, quality sweep, or pattern analysis of a diff, branch, module, or codebase. Also use when the user asks to "check" or "look over" their code for issues.
-argument-hint: "[scope: diff|branch|module-path|all]"
+argument-hint: "[scope: diff|branch|module-path|all] [--fresh]"
 allowed-tools: Bash(git *) Bash(gh *) Bash(rg *) Bash(find *) Bash(wc *)
 ---
 
@@ -9,19 +9,31 @@ allowed-tools: Bash(git *) Bash(gh *) Bash(rg *) Bash(find *) Bash(wc *)
 
 Code review that reports findings, proposes concrete fixes, and — on approval — either hands cleanup off to `/kanso-refactor` or applies the fix in place. The principles from `kanso-principles` govern both the findings and the fixes.
 
-Three phases:
+Four phases:
 
 - **Phase A — Investigation.** Read-only. Gather context and produce the findings report using the framework below. The skill's `allowed-tools` deliberately exclude Edit/Write so the investigation cannot modify files.
 - **Phase B — Proposal.** Translate Tier 1 and Tier 2 findings into a numbered list. Tag each entry by *shape*: `refactor` (behaviour-preserving) or `behaviour-change` (correctness, security, architecture). Show the list in the approval block and wait.
 - **Phase C — Apply.**
   - For `refactor`-shaped fixes → hand off to `/kanso-refactor audit-report`. That skill already enforces the behaviour-preserving rule, has the refactor taxonomy, and knows how to split work into commit-able groups. Don't reimplement it here.
   - For `behaviour-change` fixes → apply in place in the main session, one at a time, re-reading each file immediately before editing. These are not refactors; each is a real behaviour change and the user has approved it as such.
+- **Phase D — Verify.** Run the project's verification command after fixes land. Paste the exit code. If no command exists, say so plainly — don't claim success without evidence.
 
 ## Always run inline
 
 This skill runs in the calling chat. Never dispatch the audit via the Agent or Task tool, never delegate it to a subagent, never hand it off to a parallel runner. The findings, the approval gate, and any follow-up `/kanso-refactor` invocation all happen in the user's current transcript so the user can see and act on them directly. A subagent run produces output in a side window the user can't easily reach — that defeats the point.
 
 Same rule for the follow-up: when `/kanso-refactor` is invoked from the approval gate, it runs inline too.
+
+### Exception: `--fresh` for Phase A only
+
+The user can pass `--fresh` to push the investigation into a read-only subagent. Use this when the audit needs an unbiased pass over code the current session has already touched — fresh context cuts the anchoring on decisions earlier in the transcript.
+
+Under `--fresh`:
+
+- **Phase A** runs in a subagent. Give it the review framework below, the resolved scope, and read-only tools (no Edit/Write, no commit/push). Ask for its output in the exact report format defined later.
+- **Phases B, C, and D** continue inline as normal. The subagent's report lands back here as the findings; the approval gate, fixes, and verification all stay in the user's transcript.
+
+Don't dispatch Phase A under `--fresh` and then quietly run Phases B–D in the subagent too. The fresh-context advantage is for review only; application and verification need to be where the user can see them.
 
 ## Resolve the scope
 
@@ -33,6 +45,8 @@ Same rule for the follow-up: when `/kanso-refactor` is invoked from the approval
 - `all` → the whole repo (warn the user this will be noisy on anything larger than a small service)
 
 If `$ARGUMENTS` is empty, default to `diff`. If the diff is empty, fall back to the last commit and tell the user.
+
+`--fresh` is a modifier, not a scope. It can appear alongside any scope (e.g. `branch --fresh`) and triggers the Phase A subagent dispatch described above.
 
 Gather context before reviewing:
 
@@ -182,6 +196,71 @@ Routing rules on apply:
 - Any selected `behaviour-change` fix → apply in the current chat, one at a time. Re-read the file immediately before editing.
 - Do not mix the two in a single commit. `kanso-refactor`'s hard rule — refactors and behaviour changes travel in separate commits — applies here too.
 
+### Test-first for correctness fixes
+
+For any behaviour-change fix in the Correctness category — logic bugs, off-by-ones, security holes, race conditions, missing error handling — write a failing test before applying the fix when the repo has a test suite. The sequence is: reproduce the bug as a failing test, run it to confirm it fails for the expected reason, then apply the fix and re-run.
+
+Skip the test-first step only when:
+
+- The repo has no test suite, or none covering this module.
+- The bug isn't testable in isolation — network races, timing-sensitive UI, environment-specific behaviour. Name the reason.
+- The user has explicitly asked to skip it.
+
+If you're skipping, say so in the apply step's output. Don't quietly drop the test.
+
+This rule applies to Correctness only. Architecture and Clarity fixes don't require new tests — though running existing ones in Phase D still does.
+
+## Phase D — Verify
+
+After any fix lands, run the project's verification command and report the result. Never claim success without evidence.
+
+### Discover the command
+
+In priority order:
+
+1. **`AGENTS.md` / `CLAUDE.md`** — explicit build/test/lint/typecheck commands. Use these first; they're the user's canonical source.
+2. **`package.json` scripts** — `test`, `typecheck`, `lint`, `check`, `verify`.
+3. **`pyproject.toml`, `tox.ini`, `Makefile`** — `pytest`, `make test`, `make check`, `ruff`, `mypy`.
+4. **`go.mod`** — `go test ./...`, `go vet ./...`.
+5. **`Cargo.toml`** — `cargo test`, `cargo check`, `cargo clippy`.
+6. **CI config** — `.github/workflows/*`, `.gitlab-ci.yml`, `.circleci/config.yml`. If CI runs a verification job, run the same commands locally.
+
+Pick the narrowest command that covers the touched files. A full test suite is overkill for a one-line refactor; typecheck plus the relevant test file is usually enough. For a correctness fix with a fresh failing test, run that test specifically and then a broader pass.
+
+The verification command may prompt the user for permission on first run — that's expected. Don't reroute around it.
+
+### Report the result
+
+Paste the exit code and the relevant tail of output. Don't paraphrase. On pass:
+
+```
+✓ Verified — <command>
+exit 0
+<last meaningful lines, e.g. "23 passed in 1.4s">
+```
+
+On fail:
+
+```
+✗ Verification failed — <command>
+exit <n>
+<failing output>
+```
+
+A failed verification means the fix isn't done. Roll back the edit, iterate, or escalate to the user — but don't move on. Don't hand the user a broken tree and call it complete.
+
+### When no command exists
+
+If the discovery turns up nothing, say so plainly:
+
+```
+⚠ No verification command found.
+Checked: AGENTS.md, package.json, pyproject.toml, Makefile, CI config.
+The fix is applied but unverified — review the diff manually before committing.
+```
+
+Never silently skip. Either verify, or say you didn't and why.
+
 ## Framing
 
 - Critique the code, not the author. Use "this code" not "you".
@@ -193,11 +272,12 @@ Routing rules on apply:
 
 ## What this skill never does
 
-- Run via the Agent or Task tool, or dispatch any part of itself to a subagent or parallel runner. Findings and approval gate live in the calling chat.
+- Run via the Agent or Task tool, or dispatch any part of itself to a subagent or parallel runner — except Phase A under `--fresh`, which dispatches the investigation only.
 - Edit files before the user has approved the proposal block.
 - Skip the approval gate when there is at least one Tier 1 or Tier 2 finding. The gate is mandatory whenever there is something to fix.
 - Prompt for approval when there is nothing to fix. The clean-diff message stands alone.
-- Run tests, build the project, or execute the code being reviewed.
+- Run tests or build the project during Phase A. Verification runs in Phase D, after fixes are applied.
+- Claim a fix is complete without a Phase D result — pass, fail, or an explicit "no command found" note.
 - Check out branches or pull remote changes.
 - Flag things a linter already catches, without also noting the missing linter rule.
 - Generate findings for padding. If there are three Tier 1 findings and nothing else, the report has three findings.
