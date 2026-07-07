@@ -30,10 +30,12 @@ The user can pass `--fresh` to push the investigation into a read-only subagent.
 
 Under `--fresh`:
 
-- **Phase A** runs in a subagent. Give it the review framework below, the resolved scope, and read-only tools (no Edit/Write, no commit/push). Ask for its output in the exact report format defined later.
+- **Phase A** runs in a subagent. Prefer the `Explore` agent type — it is read-only by construction. Give it the review framework below and the resolved scope, and ask for its output in the exact report format defined later.
 - **Phases B, C, and D** continue inline as normal. The subagent's report lands back here as the findings; the approval gate, fixes, and verification all stay in the user's transcript.
 
 Don't dispatch Phase A under `--fresh` and then quietly run Phases B–D in the subagent too. The fresh-context advantage is for review only; application and verification need to be where the user can see them.
+
+(Deliberate design note: skill frontmatter now supports `context: fork` to run a whole skill in a subagent. It is not used here because only Phase A benefits from fresh context — the gate, fixes, and verification must stay inline.)
 
 ## Resolve the scope
 

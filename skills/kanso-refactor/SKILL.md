@@ -1,6 +1,6 @@
 ---
 name: kanso-refactor
-description: Use when the user asks to clean up, tighten, simplify, de-bloat, or refactor code. Also use when acting on findings from /kanso-audit. Behaviour-preserving only.
+description: Use when the user asks to clean up, tighten, simplify, de-bloat, de-slop, or refactor code. Also use when acting on findings from /kanso-audit or /kanso-nuclear. Behaviour-preserving only.
 argument-hint: "[scope: diff|path|audit-report|current-file]"
 disable-model-invocation: true
 allowed-tools: Bash(git *) Bash(rg *) Bash(find *)

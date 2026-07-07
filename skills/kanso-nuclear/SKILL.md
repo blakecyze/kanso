@@ -18,7 +18,7 @@ Findings, the approval gate, refactor handoffs, and the verify result all stay i
 
 ### Exception: `--fresh` for Phase A only
 
-Append `--fresh` to push the investigation into a read-only subagent. The findings come back as Phase A's output; Phases B (proposal), C (apply), and D (verify) continue inline. Use this when the current session has already touched the code — fresh context cuts the anchoring on prior decisions in the transcript. On `all`-mode runs over large repos, `--fresh` is usually the right default to keep the main chat readable.
+Append `--fresh` to push the investigation into a read-only subagent (prefer the `Explore` agent type — read-only by construction). The findings come back as Phase A's output; Phases B (proposal), C (apply), and D (verify) continue inline. Whole-skill `context: fork` is deliberately not used — only Phase A benefits from fresh context. Use this when the current session has already touched the code — fresh context cuts the anchoring on prior decisions in the transcript. On `all`-mode runs over large repos, `--fresh` is usually the right default to keep the main chat readable.
 
 ## Resolve the scope
 

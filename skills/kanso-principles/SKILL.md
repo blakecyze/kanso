@@ -16,17 +16,9 @@ The single governing principle: **prefer deletion over addition**. If a change d
 
 A comment must explain *why*, not restate *what*. If the comment echoes the code, delete the comment or rewrite it to carry business context, constraints, or intent.
 
-Bad:
-```
-// Filter users by age
-const adults = users.filter(u => u.age > 18);
-```
+Bad: `// Filter users by age` above `users.filter(u => u.age > 18)`.
 
-Good:
-```
-// Legal requirement: 18+ only
-const adults = users.filter(u => u.age > 18);
-```
+Good: `// Legal requirement: 18+ only` above the same line.
 
 ### 2. No temporal or step-marker comments
 
@@ -44,16 +36,7 @@ Let exceptions propagate. Handle them at the boundary where the recovery strateg
 
 ### 4. No filler variables
 
-```
-const result = compute(x);
-return result;
-```
-
-is just
-
-```
-return compute(x);
-```
+`const result = compute(x); return result;` is just `return compute(x);`
 
 Intermediate variables earn their place by adding a meaningful name or being referenced more than once.
 

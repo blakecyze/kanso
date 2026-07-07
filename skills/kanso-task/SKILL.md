@@ -1,6 +1,6 @@
 ---
 name: kanso-task
-description: Use when the user wants a task done well rather than fast. Rewrites the user's rough request into a sharp prompt using kanso-prompting rules, asks targeted questions only when load-bearing detail is missing, then executes the rewritten task inline with kanso-principles loaded so any code produced follows the anti-dilution rules.
+description: Use when the user wants a task done well rather than fast, wants a rough or underspecified request sharpened before it runs, or asks for a careful, principled pass at a piece of work.
 argument-hint: "[the thing you want done, in plain language]"
 disable-model-invocation: true
 allowed-tools: Bash(git *) Bash(rg *) Bash(find *) Bash(wc *)
