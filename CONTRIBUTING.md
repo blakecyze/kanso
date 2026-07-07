@@ -12,7 +12,9 @@ Before proposing, check that the job isn't already covered by an existing skill.
 
 Use the skill on a real codebase before opening a PR. Dogfood on something messy, not a toy example. If the skill only works on clean code, it doesn't work.
 
-Load the plugin locally with `claude --plugin-dir .` and exercise every trigger path in the description.
+Load the plugin locally with `claude --plugin-dir .` and exercise every trigger path in the description. The dogfood scenarios in `evals/evals.json` are the baseline: run the ones for any skill you touched.
+
+Run `scripts/lint-skills.sh` before opening a PR. It checks frontmatter, trigger-shaped descriptions, line ceilings, and house style.
 
 ## PR expectations
 
