@@ -10,15 +10,23 @@ set -eu
 [ "${KANSO_VERIFY_HOOK:-1}" = "0" ] && exit 0
 
 # Hook input arrives as JSON on stdin. We need tool_name and the edited path.
+# jq handles escaped quotes and spaces in paths; the sed fallback covers
+# environments without it.
 input="$(cat)"
 
-tool="$(printf '%s' "$input" | sed -n 's/.*"tool_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n1)"
+if command -v jq >/dev/null 2>&1; then
+  tool="$(printf '%s' "$input" | jq -r '.tool_name // empty')"
+  file="$(printf '%s' "$input" | jq -r '.tool_input.file_path // .tool_input.notebook_path // empty')"
+else
+  tool="$(printf '%s' "$input" | sed -n 's/.*"tool_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n1)"
+  file="$(printf '%s' "$input" | sed -n 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n1)"
+fi
+
 case "$tool" in
   Edit|Write|MultiEdit|NotebookEdit) ;;
   *) exit 0 ;;
 esac
 
-file="$(printf '%s' "$input" | sed -n 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n1)"
 [ -z "$file" ] && exit 0
 [ -f "$file" ] || exit 0
 
@@ -53,7 +61,12 @@ ext="${file##*.}"
 case "$ext" in
   ts|tsx|js|jsx|mjs|cjs)
     if [ -f "$root/package.json" ] && command -v npx >/dev/null 2>&1; then
-      if [ -f "$root/.eslintrc" ] || [ -f "$root/.eslintrc.js" ] || [ -f "$root/.eslintrc.json" ] || [ -f "$root/eslint.config.js" ] || [ -f "$root/eslint.config.mjs" ]; then
+      # Fastest configured linter wins: biome, then oxlint, then eslint.
+      if [ -f "$root/biome.json" ] || [ -f "$root/biome.jsonc" ]; then
+        out="$(cd "$root" && run_with_timeout npx --no-install @biomejs/biome lint "$file" 2>&1)" || surface "biome failed on $file" "$out"
+      elif [ -f "$root/.oxlintrc.json" ]; then
+        out="$(cd "$root" && run_with_timeout npx --no-install oxlint "$file" 2>&1)" || surface "oxlint failed on $file" "$out"
+      elif [ -f "$root/.eslintrc" ] || [ -f "$root/.eslintrc.js" ] || [ -f "$root/.eslintrc.json" ] || [ -f "$root/eslint.config.js" ] || [ -f "$root/eslint.config.mjs" ]; then
         out="$(cd "$root" && run_with_timeout npx --no-install eslint --no-warn-ignored "$file" 2>&1)" || surface "eslint failed on $file" "$out"
       fi
     fi
