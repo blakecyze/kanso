@@ -214,52 +214,13 @@ This rule applies to Correctness only. Architecture and Clarity fixes don't requ
 
 After any fix lands, run the project's verification command and report the result. Never claim success without evidence.
 
-### Discover the command
+Command discovery order and the pass/fail/no-command report blocks are defined once, in `kanso-refactor`'s Verify section (`../kanso-refactor/SKILL.md`). Follow them exactly. The non-negotiables:
 
-In priority order:
-
-1. **`AGENTS.md` / `CLAUDE.md`** — explicit build/test/lint/typecheck commands. Use these first; they're the user's canonical source.
-2. **`package.json` scripts** — `test`, `typecheck`, `lint`, `check`, `verify`.
-3. **`pyproject.toml`, `tox.ini`, `Makefile`** — `pytest`, `make test`, `make check`, `ruff`, `mypy`.
-4. **`go.mod`** — `go test ./...`, `go vet ./...`.
-5. **`Cargo.toml`** — `cargo test`, `cargo check`, `cargo clippy`.
-6. **CI config** — `.github/workflows/*`, `.gitlab-ci.yml`, `.circleci/config.yml`. If CI runs a verification job, run the same commands locally.
-
-Pick the narrowest command that covers the touched files. A full test suite is overkill for a one-line refactor; typecheck plus the relevant test file is usually enough. For a correctness fix with a fresh failing test, run that test specifically and then a broader pass.
-
-The verification command may prompt the user for permission on first run — that's expected. Don't reroute around it.
-
-### Report the result
-
-Paste the exit code and the relevant tail of output. Don't paraphrase. On pass:
-
-```
-✓ Verified — <command>
-exit 0
-<last meaningful lines, e.g. "23 passed in 1.4s">
-```
-
-On fail:
-
-```
-✗ Verification failed — <command>
-exit <n>
-<failing output>
-```
-
-A failed verification means the fix isn't done. Roll back the edit, iterate, or escalate to the user — but don't move on. Don't hand the user a broken tree and call it complete.
-
-### When no command exists
-
-If the discovery turns up nothing, say so plainly:
-
-```
-⚠ No verification command found.
-Checked: AGENTS.md, package.json, pyproject.toml, Makefile, CI config.
-The fix is applied but unverified — review the diff manually before committing.
-```
-
-Never silently skip. Either verify, or say you didn't and why.
+- Pick the narrowest command that covers the touched files. For a correctness fix with a fresh failing test, run that test specifically, then a broader pass. Additionally, check CI config (`.github/workflows/*`, `.gitlab-ci.yml`) — if CI runs a verification job, run the same commands locally.
+- Paste the exit code and the meaningful tail of output. Don't paraphrase.
+- A failed verification means the fix isn't done. Roll back, iterate, or escalate to the user — don't move on, and don't hand over a broken tree.
+- If no command exists, say so explicitly and list what was checked. Never silently skip.
+- The command may prompt the user for permission on first run — that's expected. Don't reroute around it.
 
 ## Framing
 

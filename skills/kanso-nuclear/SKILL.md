@@ -154,32 +154,13 @@ Apply fixes? (<r> refactor, <b> behaviour-change)
 
 Adapt the list to what's actually present. A bare "yes" never silently applies behaviour changes — it routes to refactor only when both shapes exist.
 
-Routing on apply:
-
-- Refactor-shaped fixes → `/kanso-refactor audit-report`, inline. Don't reimplement the refactor taxonomy here.
-- Behaviour-change fixes → apply inline, one at a time, re-reading each file immediately before editing.
-- Refactors and behaviour changes never share a commit.
+Routing on apply follows `kanso-audit`'s approval-gate rules (`../kanso-audit/SKILL.md`) exactly: refactor-shaped fixes go to `/kanso-refactor audit-report` inline, behaviour-change fixes apply inline one at a time with a re-read before each edit, and the two never share a commit.
 
 ## Phase D — Verify
 
-After fixes land, run the project's verification command and paste the exit code. Discovery order:
+After fixes land, run the project's verification command and paste the exit code. Command discovery order and the pass/fail/no-command report blocks are defined once, in `kanso-refactor`'s Verify section (`../kanso-refactor/SKILL.md`) — follow them exactly, and also check CI config for a verification job worth mirroring locally.
 
-1. `AGENTS.md` / `CLAUDE.md` — explicit commands. Use first.
-2. `package.json` scripts — `test`, `typecheck`, `lint`, `check`, `verify`.
-3. `pyproject.toml`, `tox.ini`, `Makefile` — `pytest`, `make test`, `ruff`, `mypy`.
-4. `go.mod` — `go test ./...`, `go vet ./...`.
-5. `Cargo.toml` — `cargo test`, `cargo check`, `cargo clippy`.
-6. CI config — read the verification job and run the same commands locally.
-
-Narrowest command that covers the touched files. On pass, paste `exit 0` plus the meaningful tail. On fail, paste the exit code and failing output, then roll back or escalate — don't iterate silently. If no command exists, say so explicitly:
-
-```
-⚠ No verification command found.
-Checked: AGENTS.md, package.json, pyproject.toml, Makefile, CI config.
-The fixes are applied but unverified — review the diff manually before committing.
-```
-
-Never silent-skip.
+Narrowest command that covers the touched files. On fail, roll back or escalate — don't iterate silently. If no command exists, say so explicitly and list what was checked. Never silent-skip.
 
 ## Tone
 
