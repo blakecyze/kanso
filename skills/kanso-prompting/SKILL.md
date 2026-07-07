@@ -6,7 +6,7 @@ user-invocable: false
 
 # kanso-prompting
 
-Standing rules for prompting current frontier models — primarily Claude 4.x (Opus 4.7, Sonnet 4.6, Haiku 4.5). These principles apply to any prompt this session produces, including prompts being constructed on the user's behalf.
+Standing rules for prompting current frontier models. These principles apply to any prompt this session produces, including prompts being constructed on the user's behalf.
 
 The single governing principle: **a prompt earns its length the same way code does**. Every clause must do work. Specificity beats verbosity; clarity beats cleverness; structure beats hope.
 
@@ -74,18 +74,24 @@ Draft → critique against criteria → refine. Three small prompts beat one lar
 
 Even one sentence (`You are a senior reviewer who flags only blocking issues`) sharpens tone, scope, and what gets surfaced. Don't waste it on filler.
 
-## Claude 4.x — what changed
+## Current frontier models — what to assume
 
-The current generation responds to prompts differently from Claude 3.x. Stale 3-era prompt scaffolding now degrades output.
+Prompt scaffolding written for older model generations now degrades output rather than improving it. Assume the following of any current frontier model:
 
-- **Instruction following is more literal.** The model no longer silently generalises an instruction from one item to all similar items. If you want it applied broadly, say so explicitly.
-- **Drop the aggressive language.** `CRITICAL`, `YOU MUST`, ALL CAPS, and triple exclamation marks now over-trigger and cause worse output, not better. Use normal declarative voice.
-- **Drop the anti-laziness scaffolds.** Force-thorough, force-tools, "do not stop until" preambles were necessary on older models and are now noise.
+- **Instruction following is literal.** The model does not silently generalise an instruction from one item to all similar items. If you want it applied broadly, say so explicitly.
+- **Drop the aggressive language.** `CRITICAL`, `YOU MUST`, ALL CAPS, and triple exclamation marks over-trigger and cause worse output, not better. Use normal declarative voice.
+- **Drop the anti-laziness scaffolds.** Force-thorough, force-tools, "do not stop until" preambles were workarounds for older models and are now noise.
 - **Verbosity self-calibrates.** Short on simple tasks, long on open-ended ones. If you need a specific length, prompt with a positive example rather than a word count.
 - **General reasoning instructions beat prescribed step plans.** `Think thoroughly before answering` outperforms a hand-written checklist in most cases. The model's reasoning is often better than what you'd prescribe.
-- **Default voice is more direct and less validation-forward.** Fewer emoji, less "great question". If you want warmth, ask for it.
-- **Prefill is unavailable from 4.6+.** Use structured outputs or system-prompt guidance instead.
+- **Default voice is direct and not validation-forward.** Fewer emoji, less "great question". If you want warmth, ask for it.
 - **If reasoning is shallow, raise effort before adding prompt scaffolding.** The effort parameter does more than re-prompting can.
+
+### Perishable facts — checked 2026-07
+
+Everything above is behavioural and ages slowly. The facts below are pinned to specific releases and go stale first — verify against current docs before repeating them:
+
+- Current families: Claude 5 (Fable/Mythos), Opus 4.8, Sonnet 5, Haiku 4.5.
+- Assistant-prefill is unavailable on Claude 4.6+ models. Use structured outputs or system-prompt guidance instead.
 
 ## Anti-patterns
 
