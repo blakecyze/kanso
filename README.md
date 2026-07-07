@@ -101,7 +101,7 @@ Skills load on next session, or immediately via the file watcher.
 
 - **Audit reports before it edits.** Findings surface in the working session; fixes land only after you approve the proposal block (`y/n/edit/pick`).
 - **Audit and refactor verify their own work.** Each runs the project's lint/typecheck/test command after fixes land and pastes the exit code. No silent "looks good".
-- **A PostToolUse hook catches regressions inline.** Every edit triggers a fast linter or syntax check on the touched file (ESLint, ruff, `go vet`, `cargo check`). Sub-second on pass, loud on fail. Opt out with `KANSO_VERIFY_HOOK=0`.
+- **A PostToolUse hook catches regressions inline.** Every edit triggers a fast linter or syntax check on the touched file (biome, oxlint, ESLint, ruff, `go vet`, `cargo check`). Sub-second on pass, loud on fail. Opt out with `KANSO_VERIFY_HOOK=0`.
 - **Everything that writes is manual-only.** Audit fixes, commits, PRs, refactors, and context edits never auto-invoke.
 - **Context target is `AGENTS.md`.** `CLAUDE.md` is only touched when the guidance is Claude-specific.
 - **Voice preservation over house style.** If the repo is terse, kanso stays terse.

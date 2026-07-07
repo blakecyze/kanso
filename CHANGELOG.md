@@ -2,6 +2,22 @@
 
 All notable changes to kanso are recorded here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning follows [SemVer](https://semver.org/).
 
+## [0.4.0] — 2026-07-07
+
+### Changed
+
+- `kanso-prompting` rewritten version-agnostic. Behavioural guidance stated as current-generation defaults; release-pinned facts quarantined in a dated "Perishable" section.
+- Phase D verify procedure and approval-gate routing deduplicated. `kanso-refactor` holds the canonical verify procedure, `kanso-audit` the canonical routing rules; `kanso-nuclear` and `kanso-audit` cross-reference instead of copying. User-facing blocks stay inline.
+- Trigger descriptions tuned. `kanso-task`'s description no longer summarises its own workflow (agents were at risk of following the description and skipping the skill body). All descriptions are trigger-conditions-only.
+- `kanso-principles` trimmed to 105 lines — it loads on every code task. Examples compressed; no rule changed.
+- `--fresh` sections in `kanso-audit` and `kanso-nuclear` name `Explore` as the preferred Phase A agent and record why whole-skill `context: fork` is deliberately not used.
+- Verify hook hardened: parses hook JSON with `jq` (sed fallback), reads `tool_input.file_path` specifically, detects biome and oxlint ahead of ESLint. Moved to the standard `hooks/` plugin-root layout.
+
+### Added
+
+- `scripts/lint-skills.sh` — static checks for frontmatter, trigger-shaped descriptions, line ceilings, and house style.
+- `evals/evals.json` — dogfood scenarios for the workflow skills, runnable by hand or via the skill-creator eval runner.
+
 ## [0.3.0] — 2026-05-27
 
 ### Added

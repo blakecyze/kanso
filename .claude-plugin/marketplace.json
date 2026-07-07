@@ -1,5 +1,6 @@
 {
   "name": "kanso",
+  "description": "Anti-dilution skills for Claude Code. Keeps AI-generated code tight, intentional, and free of slop.",
   "owner": {
     "name": "Blake Cyze",
     "url": "https://github.com/blakecyze"
