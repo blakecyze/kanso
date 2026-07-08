@@ -12,7 +12,7 @@ The user types `/kanso-task <rough request>`. This skill turns that rough reques
 
 Three phases:
 
-- **Phase A — Clarify (only if needed).** Inspect the request. If load-bearing detail is missing (target, scope, constraints, definition of done), ask up to three targeted questions. If the request is already specific enough, skip this phase entirely.
+- **Phase A — Clarify (only if needed).** Run the ambiguity pre-flight. If a trigger fires, ask one tight batch of questions and fold the answers in. If the input is already concrete — or the user waved the skip valve — go straight to formatting with no questions.
 - **Phase B — Rewrite.** Apply the `kanso-prompting` rules to produce a sharp version of the prompt. Show it to the user. Wait for approval.
 - **Phase C — Execute.** Run the rewritten prompt inline in the current chat. Any code produced during execution follows `kanso-principles`.
 
@@ -22,18 +22,36 @@ This skill runs in the calling chat. Never dispatch the rewrite, the approval ga
 
 ## Phase A — Clarify
 
-Before rewriting, check the request for load-bearing detail. The four things that materially change the output:
+A pre-flight ambiguity check that runs before formatting. Its only job is to catch the gaps that would force a guess. Concrete input passes through untouched — the yap-and-go feel survives; the pause is earned, not routine.
 
-1. **Target** — what file, module, branch, or scope is in play. `improve the auth flow` is missing this; `improve src/auth/session.ts` is not.
-2. **Scope of change** — is this a behaviour change, a refactor, a new feature, an investigation, a doc? Different shapes call for different prompts.
-3. **Constraints** — performance budget, backward compatibility, framework version, deadline, things-not-to-touch.
-4. **Definition of done** — what does success look like? Tests passing, a specific output format, a working demo, a merged PR?
+### The skip valve — check this first
 
-If the request already supplies enough of these to write a sharp prompt, skip Phase A. If one or two are missing, ask only for those. Maximum three questions, each one short and answerable in a sentence.
+Two ways an input skips questioning entirely:
 
-Never ask cosmetic questions. Never ask "would you like me to also…" — that's scope creep dressed as helpfulness. The clarifying phase exists to remove ambiguity, not to negotiate scope.
+1. **Explicit.** The user signalled skip. The unambiguous form is the `--go` flag. A plain-language equivalent (`just format it`, `no questions`) counts only when it is a directive *about* the request rather than part of it — a trailing or standalone instruction to the skill, not a phrase inside the task being described. `/kanso-task format the users table, no questions about the schema yet` is a task that happens to contain "no questions"; it is not a skip signal. When a plain-language form is genuinely ambiguous, treat it as task content and run the triggers. Honour a real skip without comment: format silently, even if a trigger would otherwise fire. The user has taken the wheel.
+2. **Inferred.** The input is high-confidence — a trained reader could produce a sharp prompt from it without inventing anything load-bearing. Format silently.
 
-If after one round of clarification the request is still unworkable, surface that plainly rather than rewriting a vague prompt into a vague-but-prettier prompt.
+Only when neither applies do you run the triggers below.
+
+### Ambiguity triggers
+
+Ask when any one is genuinely true. If none are, don't ask — formatting a clear request is the default, not the exception.
+
+1. **Acceptance criteria unclear** — "done" has no observable shape. `make search faster` doesn't say how much faster or how you'd know.
+2. **Scope boundaries fuzzy** — what's explicitly out of scope is undefined, and the request could plausibly balloon. `tidy up the auth module` — one function, or the directory?
+3. **Unstated technical choice** — a decision is being assumed rather than stated. `add caching` — where, what eviction, in-memory or shared?
+4. **Undefined term or referent** — a word or pointer with no fixed meaning here. `fix the thing we discussed`, `the legacy path`.
+
+A missing file/module target usually surfaces as trigger 2 or 4 — treat "which code?" as an ambiguity, not a separate checklist item.
+
+### The questioning rules
+
+- **One batch, then format.** Ask every question in a single round. No conversational back-and-forth, no follow-up interrogation. Take the answers, fold them in, format.
+- **Cap at three. Fewer is better.** One sharp question beats three padded ones. If only one trigger fired, ask one thing.
+- **Aim at the ambiguity, not at a spec.** Each question exists to sharpen the formatted prompt. This is a prompt optimiser, not a spec tool — no EARS, no acceptance-criteria tables, no ceremony. Keep it loose.
+- **No cosmetic or scope-creep questions.** Never ask "would you like me to also…" — that negotiates scope under cover of clarifying. Ask only what removes a guess.
+
+If the input is still unworkable after one round, say so plainly rather than formatting a vague request into a vague-but-prettier one.
 
 ## Phase B — Rewrite
 
@@ -120,7 +138,8 @@ The file lives alongside the user's repo; it's their artefact, not a hidden one.
 - Run via the Agent or Task tool, or dispatch any phase to a subagent or parallel runner.
 - Execute the rewritten prompt without showing it to the user first.
 - Pad the rewrite to look more rigorous. Length is not signal.
-- Ask more than three clarifying questions per round.
+- Ask more than three clarifying questions, or spread them across more than one round. The pre-flight is a single batch.
+- Question a concrete input, or one where the user waved the skip valve. High-confidence input and an explicit `--go` both format silently.
 - Re-introduce the noise patterns `kanso-prompting` warns against (`CRITICAL`, ALL CAPS, anti-laziness scaffolds).
 - Silently change the user's intent under cover of "sharpening". The rewrite is faithful — only the wording improves.
 - Edit `kanso-principles` or `kanso-prompting` during execution. Those are reference docs, not work targets.
@@ -130,6 +149,7 @@ The file lives alongside the user's repo; it's their artefact, not a hidden one.
 
 - Rewriting a vague prompt into a longer vague prompt. If the source is empty of intent, ask — don't pad.
 - Asking clarifying questions the user already answered in the original request.
+- Running the ambiguity triggers when the input is plainly concrete. A pause that isn't earned kills the yap-and-go feel the skill exists to protect.
 - Re-stating the original request in the rewrite. The rewrite is a different artefact, not a paraphrase.
 - Drifting from the user's actual ask by adding plausible-sounding scope ("I'll also write tests for it"). Stay faithful; if you think more is needed, surface it as a follow-up after execution, not as a silent expansion.
 - Treating "execute inline" as licence to skip the principles. `kanso-principles` is the whole point of routing through this skill rather than typing the prompt directly.
