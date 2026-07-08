@@ -1,37 +1,33 @@
 # kanso
 
-> 簡素 — elimination of clutter.
+> 簡素: elimination of clutter.
 
-Nine Claude Code skills for people who think AI-generated code is too long.
+I kept watching Claude write code that ran fine and still felt puffy. Dead branches, comments that just say what the line already says, a whole helper for something used once. kanso pushes back. Nine skills that delete before they add, match your repo's voice, and earn every line, whether they're reviewing, refactoring, committing or writing a PR. Nothing gets written until you've seen the plan.
 
-kanso audits, refactors, commits, and writes PRs with a curatorial bias: delete before you add, match the repo's voice, earn every line.
+## Get it
 
 ```
 /plugin marketplace add blakecyze/kanso
 /plugin install kanso
 ```
 
-&nbsp;
-
 ## The skills
 
-| Skill | What it does | Invocation |
+| Skill | What it does | How you call it |
 |---|---|---|
-| `kanso-principles` | Standing anti-dilution rules for code. Loaded automatically. | auto |
-| `kanso-prompting` | Standing rules for writing sharper prompts. Loaded by `/kanso-task`. | auto (via task) |
-| `kanso-task` | Rewrites a rough request into a sharp prompt, then executes it inline with kanso-principles loaded. | `/kanso-task [request]` |
-| `kanso-audit` | Reviews code, reports findings, proposes fixes; hands refactors to `/kanso-refactor` and applies behaviour changes in place on approval. | `/kanso-audit [scope]` |
-| `kanso-nuclear` | Structural maintainability review. Judo over rearrangement, file sprawl, spaghetti growth, abstraction theatre, wrong-layer logic. Defaults to the whole codebase. | `/kanso-nuclear [scope]` |
-| `kanso-refactor` | Behaviour-preserving cleanup. Never mixes refactor with behaviour change. | `/kanso-refactor [scope]` |
-| `kanso-commit` | Atomic commits with messages that answer *why*. | `/kanso-commit` |
-| `kanso-pr` | Self-contained PR descriptions drawn from commit history. | `/kanso-pr` |
-| `kanso-context` | Prunes and curates `AGENTS.md` / `CLAUDE.md`. | `/kanso-context [mode]` |
-
-&nbsp;
+| `kanso-principles` | The anti-slop rules for code, loaded on their own. | auto |
+| `kanso-prompting` | Rules for turning a rough ask into a sharp prompt. | auto (via task) |
+| `kanso-task` | Sharpens your request, then runs it with the principles loaded. | `/kanso-task [request]` |
+| `kanso-audit` | Reviews code, shows findings, proposes fixes before touching a thing. | `/kanso-audit [scope]` |
+| `kanso-nuclear` | The big structural review: file sprawl, spaghetti, abstraction theatre. | `/kanso-nuclear [scope]` |
+| `kanso-refactor` | Cleanup that never changes behaviour. The two never mix. | `/kanso-refactor [scope]` |
+| `kanso-commit` | Atomic commits with messages that say *why*. | `/kanso-commit` |
+| `kanso-pr` | PR descriptions that stand on their own, drawn from your commits. | `/kanso-pr` |
+| `kanso-context` | Keeps `AGENTS.md` / `CLAUDE.md` lean. | `/kanso-context [mode]` |
 
 ## What it looks like
 
-**Before `/kanso-refactor`:**
+Before `/kanso-refactor`:
 
 ```python
 def get_user(user_id):
@@ -46,74 +42,34 @@ def get_user(user_id):
         return None
 ```
 
-**After:**
+After:
 
 ```python
 def get_user(user_id):
     return db.query(User).filter(User.id == user_id).first()
 ```
 
-Five anti-patterns removed: tautological comment, filler variable, redundant `is not None` check, dead `else`, silent exception swallow.
-
-&nbsp;
-
-**`/kanso-commit` output:**
-
-```
-fix(auth): reject tokens issued before password change
-
-Previously, changing the password did not invalidate existing sessions,
-allowing a compromised token to remain valid indefinitely. Reject any
-token with `iat` earlier than the user's password_updated_at.
-```
-
-&nbsp;
-
-## Install
-
-Plugin (recommended):
-
-```
-/plugin marketplace add blakecyze/kanso
-/plugin install kanso
-```
-
-Manual, personal scope:
-
-```bash
-git clone https://github.com/blakecyze/kanso ~/kanso
-mkdir -p ~/.claude/skills
-cp -r ~/kanso/skills/* ~/.claude/skills/
-```
-
-Manual, project scope:
-
-```bash
-mkdir -p .claude/skills
-cp -r path/to/kanso/skills/* .claude/skills/
-```
-
-Skills load on next session, or immediately via the file watcher.
-
-&nbsp;
+Five bits of clutter gone: the comment that repeats the signature, the filler variable, the redundant `is not None`, the dead `else`, and the `except` that quietly ate every error.
 
 ## How it behaves
 
-- **Audit reports before it edits.** Findings surface in the working session; fixes land only after you approve the proposal block (`y/n/edit/pick`).
-- **Audit and refactor verify their own work.** Each runs the project's lint/typecheck/test command after fixes land and pastes the exit code. No silent "looks good".
-- **A PostToolUse hook catches regressions inline.** Every edit triggers a fast linter or syntax check on the touched file (biome, oxlint, ESLint, ruff, `go vet`, `cargo check`). Sub-second on pass, loud on fail. Opt out with `KANSO_VERIFY_HOOK=0`.
-- **Everything that writes is manual-only.** Audit fixes, commits, PRs, refactors, and context edits never auto-invoke.
-- **Context target is `AGENTS.md`.** `CLAUDE.md` is only touched when the guidance is Claude-specific.
-- **Voice preservation over house style.** If the repo is terse, kanso stays terse.
+- **It reports before it edits.** Findings land in your session first. Fixes only go in once you approve the block (`y/n/edit/pick`).
+- **It checks its own work.** Audit and refactor run your lint/typecheck/test command after fixes land and paste the exit code. No silent "looks good".
+- **A hook catches regressions inline.** Every edit fires a fast check on the file you touched (biome, oxlint, ESLint, ruff, `go vet`, `cargo check`). Quiet on pass, loud on fail. Turn it off with `KANSO_VERIFY_HOOK=0`.
+- **Nothing writes on its own.** Fixes, commits, PRs, refactors and context edits are all manual.
+- **Your voice wins.** If the repo is terse, kanso stays terse. It won't push a house style on you.
 
-&nbsp;
+## The family
 
-## Contributing
+Same "earn your keep" idea, pointed at different work:
 
-A skill has to earn its place. If you can't describe its trigger in one sentence, it's a note, not a skill. See [CONTRIBUTING.md](CONTRIBUTING.md).
+- [mimesis](https://github.com/blakecyze/mimesis) does it for writing and design. It strips the AI tells out of prose.
+- [swarm](https://github.com/blakecyze/swarm) does it for agents. It fans work out only when a single pass would cost you more.
 
-&nbsp;
+## Chip in
 
-## License
+A skill has to earn its spot. If you can't say its trigger in one sentence, it's a note, not a skill. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Licence
 
 MIT.

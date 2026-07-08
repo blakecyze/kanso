@@ -1,6 +1,6 @@
 {
   "name": "kanso",
-  "description": "Anti-dilution skills for Claude Code. Keeps AI-generated code tight, intentional, and free of slop.",
+  "description": "Claude Code skills that keep AI-written code short and honest. Delete before you add, earn every line.",
   "owner": {
     "name": "Blake Cyze",
     "url": "https://github.com/blakecyze"
@@ -9,7 +9,7 @@
     {
       "name": "kanso",
       "source": "./",
-      "description": "Anti-dilution skills for Claude Code. Keeps AI-generated code tight, intentional, and free of slop."
+      "description": "Claude Code skills that keep AI-written code short and honest. Delete before you add, earn every line."
     }
   ]
 }
