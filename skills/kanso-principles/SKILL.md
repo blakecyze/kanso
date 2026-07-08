@@ -103,3 +103,10 @@ Flag anti-pattern instances against this taxonomy. Use the category names above 
 Delete freely. Commented-out code is deleted. Dead imports are deleted. Stale comments that no longer match the code are deleted. Unused parameters, variables, and branches are deleted. Git remembers.
 
 Refactor and behaviour change do not share a commit. If a task requires both, split them.
+
+## Cross-harness conventions
+
+These skills follow the Agent Skills standard and run in any compatible tool (Claude Code, Codex CLI, Cursor, Gemini CLI, Grok Build). Two conventions keep them portable:
+
+- A `/kanso-<name>` reference means: invoke the kanso-<name> skill by whatever mechanism your harness provides. A slash command, a skill mention, or reading its SKILL.md directly all count.
+- Where a skill names a harness feature your tool lacks (subagents, hooks, per-agent model selection), apply the fallback the skill gives, or run the step inline.

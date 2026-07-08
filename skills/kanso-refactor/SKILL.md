@@ -109,6 +109,8 @@ Attack in this order. Stop when the signal-to-cost ratio drops.
 
 A refactor is only behaviour-preserving if you can show it. Run the project's verification command after edits land and paste the exit code.
 
+In Claude Code, kanso's PostToolUse hook already lint-checks each edited file as it lands. In a harness without edit hooks, that safety net did not run — the verification here is the only check, so never skip it there.
+
 ### Discover the command
 
 In priority order:

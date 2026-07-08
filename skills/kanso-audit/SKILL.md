@@ -30,7 +30,7 @@ The user can pass `--fresh` to push the investigation into a read-only subagent.
 
 Under `--fresh`:
 
-- **Phase A** runs in a subagent. Prefer the `Explore` agent type — it is read-only by construction. Give it the review framework below and the resolved scope, and ask for its output in the exact report format defined later.
+- **Phase A** runs in a subagent. Prefer the `Explore` agent type — it is read-only by construction. Give it the review framework below and the resolved scope, and ask for its output in the exact report format defined later. If the harness has no read-only subagent, say so in one line and run Phase A inline; `--fresh` degrades gracefully, it never blocks the audit.
 - **Phases B, C, and D** continue inline as normal. The subagent's report lands back here as the findings; the approval gate, fixes, and verification all stay in the user's transcript.
 
 Don't dispatch Phase A under `--fresh` and then quietly run Phases B–D in the subagent too. The fresh-context advantage is for review only; application and verification need to be where the user can see them.

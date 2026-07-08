@@ -191,6 +191,14 @@ Bullet list. Specific.>
 ## References
 
 <Links to deeper docs. Use @filepath imports in Claude Code.>
+
+## Standing rules
+
+<Only when skill libraries are installed. Point, don't copy:
+"Before writing code, read and follow `.agents/skills/kanso-principles/SKILL.md`
+(or `~/.agents/skills/...` for user-level installs)." Claude Code auto-loads
+principles skills; other Agent Skills tools load skills on demand, so this
+pointer is what puts the standing rules in front of them.>
 ```
 
 ## Mode: sync

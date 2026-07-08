@@ -2,6 +2,20 @@
 
 All notable changes to kanso are recorded here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning follows [SemVer](https://semver.org/).
 
+## [0.4.1] — 2026-07-08
+
+### Added
+
+- `scripts/install.sh` — cross-tool installer. Symlinks each skill into `~/.agents/skills/` and any per-tool user skill dirs present (`~/.codex/skills`, `~/.cursor/skills`, `~/.gemini/skills`), so any Agent Skills-compatible tool picks them up from the one repo checkout. `--project`, `--copy`, `--uninstall`.
+- Cross-harness conventions section in `kanso-principles`: what `/kanso-<name>` references mean outside Claude Code, and how to degrade missing harness features.
+- README section on using kanso with Codex, Cursor, Gemini CLI, and Grok Build, including the honest hook caveat.
+
+### Changed
+
+- `--fresh` in `kanso-audit` and `kanso-nuclear` degrades gracefully on harnesses without read-only subagents: Phase A runs inline with a one-line note.
+- `kanso-refactor`'s Verify section notes that outside Claude Code no PostToolUse hook ran, so the verify step is the only check.
+- `kanso-context`'s init skeleton gains an optional Standing rules pointer block, so tools that load skills on demand still see `kanso-principles`.
+
 ## [0.4.0] — 2026-07-07
 
 ### Changed

@@ -6,10 +6,22 @@ I kept watching Claude write code that ran fine and still felt puffy. Dead branc
 
 ## Get it
 
+In Claude Code:
+
 ```
 /plugin marketplace add blakecyze/kanso
 /plugin install kanso
 ```
+
+Anywhere else (Codex, Cursor, Gemini CLI, Grok Build), the skills follow the open Agent Skills standard, so one script installs them for every tool at once:
+
+```bash
+git clone https://github.com/blakecyze/kanso && kanso/scripts/install.sh
+```
+
+That symlinks each skill into `~/.agents/skills/`, plus each tool's own user dir (`~/.codex/skills`, `~/.cursor/skills`, `~/.gemini/skills`) where one exists, so a `git pull` updates every tool together. Restart the tool afterwards; most cache their skill list. `--project` installs into the current repo instead, `--copy` if your setup can't follow symlinks, `--uninstall` to undo.
+
+One honest caveat: the edit-verify hook (the thing that lint-checks each edit as it lands) is Claude Code plumbing. Elsewhere the skills tell the model to run your verify command itself before committing, which works, it's just a promise rather than a guarantee.
 
 ## The skills
 
